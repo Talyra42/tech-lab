@@ -1,5 +1,6 @@
 import {Box, Spacer, Text} from 'ink';
 import React, {useEffect, useState} from 'react';
+import {TextInput} from '@inkjs/ui';
 
 export default function App() {
   const [counter, setCounter] = useState(0);
@@ -14,10 +15,16 @@ export default function App() {
 
   return (
     <>
-      <Box borderStyle={'round'} width={20}>
-        <Text>Counter</Text>
-        <Spacer />
-        <Text>{counter}</Text>
+      <Box flexDirection="column" borderStyle={'round'} gap={2}>
+        <Box width={20}>
+          <Text>Counter</Text>
+          <Spacer />
+          <Text>{counter}</Text>
+        </Box>
+        <Box flexDirection="column">
+          <Text>模拟登录表单</Text>
+          <TextInput placeholder="输入用户名"></TextInput>
+        </Box>
       </Box>
     </>
   );
