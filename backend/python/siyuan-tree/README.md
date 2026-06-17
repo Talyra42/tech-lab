@@ -1,102 +1,66 @@
-# siyuan-tree
+# siyuan-copilot
 
-一个交互式 CLI 小工具，把**思源笔记**的文档树结构导出成树状图 / JSON / Markdown，方便归档或喂给 AI 识别。
+你思源笔记的 **AI 副驾**：不在这里手写代码，而是用来「和 AI 讨论我的思源笔记」。
 
-## 功能
+思源笔记把内容存成自有的块格式、不是普通 Markdown，AI 无法直接打开。本仓库在 `tools/`
+下封装了一组调用思源 kernel API 的脚本，**由 AI（Claude Code）运行**来读取、检索、分析笔记，
+然后陪你讨论、总结、查漏补缺。你只管开着思源、提问就行。
 
-- 🌳 递归读取笔记本下的文档层级，渲染成彩色树状图
-- ✅ 交互式多选要导出的笔记本（基于 `questionary`），也可一键导出全部
-- 🎨 终端美化输出（基于 `rich`）
-- 📦 三种输出格式：`tree` / `json` / `markdown`，统一保存到 `output/`
+## 怎么用
+
+在本项目里直接跟 Claude Code 说人话，例如：
+
+- 「读一下 React Fiber 那篇，帮我总结」
+- 「我哪几篇笔记写过闭包陷阱？」
+- 「我最近在学什么？」
+- 「我的 Ink 学到哪了，还差啥？」
+
+Claude 会自动用 `siyuan-read` Skill 调下面的工具，先取内容再帮你处理。
+**唯一前提：思源客户端开着**（API 才通）。
 
 ## 环境要求
 
-- Python ≥ 3.11
-- [uv](https://docs.astral.sh/uv/)（包管理）
+- Python ≥ 3.11、[uv](https://docs.astral.sh/uv/)
 - 思源笔记已启动（默认端口 `6806`）
-
-## 安装
-
-```bash
-uv sync
-```
 
 ## 配置
 
-打开 [main.py](main.py)，修改顶部配置：
-
-```python
-SIYUAN_URL = "http://127.0.0.1:6806"   # 思源地址，一般不用改
-API_TOKEN  = "你的 Token"               # ← 必填
-MAX_DEPTH  = 999                        # 导出层级深度，999 = 不限制
-```
-
-> Token 位置：思源笔记 → 设置 → 关于 → API Token
-
-## 使用
+复制模板并填入 Token（Token 位置：思源笔记 → 设置 → 关于 → API Token）：
 
 ```bash
-# 交互式选择笔记本，终端显示彩色树，并写入 output/res.txt
-uv run python main.py
-
-# 导出全部笔记本（跳过交互选择）
-uv run python main.py --all
-
-# 导出为 JSON（最适合喂给 AI），写入 output/res.json
-uv run python main.py -a -f json
-
-# 导出为 Markdown，自定义文件名 → output/tree.md
-uv run python main.py -a -f markdown -o tree.md
+cp config.example.json config.json
+# 编辑 config.json，填入 token
 ```
 
-### 参数
+`config.json` 已被 `.gitignore` 忽略，不会提交。
 
-| 参数 | 说明 |
+## 工具（由 AI 运行，也可手动跑）
+
+全部从项目根用 `uv run python tools/<name>.py` 运行：
+
+| 脚本 | 作用 |
 |------|------|
-| `-a`, `--all` | 导出全部笔记本，跳过交互式选择 |
-| `-f`, `--format {tree,json,markdown}` | 输出格式，默认 `tree` |
-| `-o`, `--output FILE` | 输出文件名（默认 `res.txt`/`res.json`/`res.md`） |
-| `-h`, `--help` | 显示帮助 |
+| `tools/structure.py` | 导出笔记本结构（树 / JSON / Markdown） |
+| `tools/read.py` | 读单篇或整个子树（`--tree`）的 Markdown 正文 |
+| `tools/search.py` | 全文检索笔记正文（不只标题） |
+| `tools/recent.py` | 列出最近编辑的文档 |
+| `tools/stats.py` | 各笔记本文档数 / 字数统计 |
 
-> 交互模式下：**空格**勾选、**回车**确认、**Ctrl+C** 取消。
+每个脚本都有 `-h` 帮助。`tools/siyuan.py` 是它们共用的 API 客户端。
 
-## 输出
+## 项目结构
 
-所有导出文件统一存放在项目的 `output/` 目录（该目录已被 `.gitignore` 忽略）。
-不指定 `-o` 时，按格式使用默认文件名：
-
-| 格式 | 默认文件 | 内容 |
-|------|----------|------|
-| `tree` | `output/res.txt` | 纯文本树（终端另显示彩色版） |
-| `json` | `output/res.json` | 嵌套结构，含 `id` / `title` / `path` / `children` |
-| `markdown` | `output/res.md` | 嵌套列表，AI 友好 |
-
-`json` 输出示例：
-
-```json
-{
-  "notebooks": [
-    {
-      "id": "20210101...",
-      "name": "我的笔记本",
-      "docs": [
-        {
-          "id": "20210808...",
-          "title": "父文档",
-          "path": "/父文档",
-          "children": [
-            { "id": "...", "title": "子文档", "path": "/父文档/子文档", "children": [] }
-          ]
-        }
-      ]
-    }
-  ]
-}
+```
+.claude/skills/siyuan-read/   # 教 AI 怎么用这些工具的 Skill
+tools/                        # API 工具脚本
+docs/                         # 思源完整 API 文档（扩展功能时查）
+config.json                   # URL / Token / 深度（私有，gitignore）
+config.example.json           # 配置模板
+output/                       # 结构导出文件（gitignore）
 ```
 
 ## 工作原理
 
-通过思源的本地 HTTP API：
-
-1. `POST /api/notebook/lsNotebooks` 列出所有（未关闭的）笔记本
-2. `POST /api/query/sql` 按 `hpath` 逐层查询 `blocks` 表中的文档块（`type='d'`），递归构建文档树
+通过思源本地 HTTP API：`/api/notebook/lsNotebooks` 列笔记本、`/api/query/sql` 查 `blocks`
+表（文档块 `type='d'`）、`/api/export/exportMdContent` 把文档导出为 Markdown。完整 API
+见 [docs/siyuan-api_zh_CN.md](docs/siyuan-api_zh_CN.md)。
