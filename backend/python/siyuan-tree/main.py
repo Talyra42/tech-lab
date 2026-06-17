@@ -4,7 +4,8 @@
 
 运行前请确认：
   1. 思源笔记已启动（默认端口 6806）
-  2. 在思源「设置 - 关于」中找到 API Token 并填入下方
+  2. 复制 config.example.json 为 config.json，
+     在思源「设置 - 关于」中找到 API Token 并填入
 
 用法示例：
   uv run python main.py                  # 交互式选择笔记本，树状展示
@@ -26,19 +27,44 @@ from rich.console import Console
 from rich.tree import Tree
 
 # ── 配置 ──────────────────────────────────────────
-SIYUAN_URL = "http://127.0.0.1:6806"
-API_TOKEN = "sh9d8aw3rslyeb7q"  # ← 替换成你的 Token
-MAX_DEPTH = 999  # 导出层级深度，999 = 不限制
-# 导出文件统一存放的目录（锚定到脚本所在目录，无论从哪里运行都落在项目内）
-OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
+# 所有路径都锚定到脚本所在目录，无论从哪里运行都落在项目内
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
+# 导出文件统一存放的目录
+OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 # 不指定 -o 时，按格式使用的默认文件名
 DEFAULT_NAMES = {"tree": "res.txt", "json": "res.json", "markdown": "res.md"}
+# config.json 缺失时的默认值（token 留空，强制用户填写）
+DEFAULT_CONFIG = {"url": "http://127.0.0.1:6806", "token": "", "max_depth": 999}
 # ─────────────────────────────────────────────────
+
+
+def load_config() -> dict:
+    """从 config.json 读取配置，缺失的字段用 DEFAULT_CONFIG 补齐。
+
+    若文件不存在，提示用户照着 config.example.json 创建。
+    """
+    if not os.path.exists(CONFIG_PATH):
+        err.print("[yellow]⚠ 未找到 config.json[/yellow]")
+        err.print("  [dim]请复制 config.example.json 为 config.json，并填入你的 API Token。[/dim]")
+        sys.exit(0)
+    try:
+        with open(CONFIG_PATH, encoding="utf-8") as f:
+            user_config = json.load(f)
+    except (json.JSONDecodeError, OSError) as e:
+        err.print(f"[bold red]✗ 读取 config.json 失败：[/bold red]{e}")
+        sys.exit(1)
+    return {**DEFAULT_CONFIG, **user_config}
 
 # 数据输出走 stdout，提示信息走 stderr，
 # 这样 -f json/markdown 时 stdout 是干净的、可直接管道给 AI。
 console = Console()
 err = Console(stderr=True)
+
+# 运行时由 main() 从 config.json 填充
+SIYUAN_URL = DEFAULT_CONFIG["url"]
+API_TOKEN = DEFAULT_CONFIG["token"]
+MAX_DEPTH = DEFAULT_CONFIG["max_depth"]
 
 
 def post(endpoint: str, payload: dict = None) -> dict:
@@ -205,10 +231,16 @@ def parse_args():
 
 
 def main():
+    global SIYUAN_URL, API_TOKEN, MAX_DEPTH
     args = parse_args()
 
+    config = load_config()
+    SIYUAN_URL = config["url"]
+    API_TOKEN = config["token"]
+    MAX_DEPTH = config["max_depth"]
+
     if API_TOKEN in ("", "your_token_here"):
-        err.print("[yellow]⚠ 请先在脚本顶部填写你的 API Token，然后重新运行。[/yellow]")
+        err.print("[yellow]⚠ 请先在 config.json 填写你的 API Token，然后重新运行。[/yellow]")
         err.print("  [dim]Token 位置：思源笔记 → 设置 → 关于 → API Token[/dim]")
         sys.exit(0)
 
