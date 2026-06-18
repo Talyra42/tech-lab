@@ -3,9 +3,10 @@ import React, {FC, useEffect, useState} from 'react';
 
 interface IProps {
   items: string[];
+  onSelected: (val: string) => void;
 }
 
-const App: FC<IProps> = ({items}) => {
+const App: FC<IProps> = ({items, onSelected}) => {
   const [choice, setChoice] = useState(0);
   const [isSelected, setIsSelected] = useState(false);
   const {exit} = useApp();
@@ -16,6 +17,7 @@ const App: FC<IProps> = ({items}) => {
     } else if (key.downArrow) {
       setChoice(prev => (prev < items.length - 1 ? prev + 1 : prev));
     } else if (key.return) {
+      onSelected(items[choice]!);
       setIsSelected(true);
     }
   });

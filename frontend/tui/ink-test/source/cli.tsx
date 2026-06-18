@@ -19,4 +19,18 @@ const cli = meow(
   },
 );
 
-render(<App items={cli.input} />);
+let selected: string | undefined;
+
+const {waitUntilExit} = render(
+  <App
+    items={cli.input}
+    onSelected={val => {
+      selected = val;
+    }}
+  />,
+  {
+    stdout: process.stderr,
+  },
+);
+await waitUntilExit();
+if (selected) console.log(selected);
