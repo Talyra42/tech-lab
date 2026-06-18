@@ -1,5 +1,5 @@
 import {Box, Text, useApp, useInput} from 'ink';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 
 const CHOICES = ['苹果', '香蕉', '橙子'];
 
@@ -15,11 +15,12 @@ export default function App() {
       setChoice(prev => (prev < CHOICES.length - 1 ? prev + 1 : prev));
     } else if (key.return) {
       setIsSelected(true);
-      setTimeout(() => {
-        exit();
-      }, 0);
     }
   });
+
+  useEffect(() => {
+    if (isSelected) exit();
+  }, [exit, isSelected]);
 
   return (
     <Box flexDirection="column">
