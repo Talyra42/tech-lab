@@ -1,9 +1,11 @@
 import {Box, Text, useApp, useInput} from 'ink';
-import React, {useEffect, useState} from 'react';
+import React, {FC, useEffect, useState} from 'react';
 
-const CHOICES = ['苹果', '香蕉', '橙子'];
+interface IProps {
+  items: string[];
+}
 
-export default function App() {
+const App: FC<IProps> = ({items}) => {
   const [choice, setChoice] = useState(0);
   const [isSelected, setIsSelected] = useState(false);
   const {exit} = useApp();
@@ -12,26 +14,35 @@ export default function App() {
     if (key.upArrow) {
       setChoice(prev => (prev > 0 ? prev - 1 : 0));
     } else if (key.downArrow) {
-      setChoice(prev => (prev < CHOICES.length - 1 ? prev + 1 : prev));
+      setChoice(prev => (prev < items.length - 1 ? prev + 1 : prev));
     } else if (key.return) {
       setIsSelected(true);
     }
   });
 
   useEffect(() => {
-    if (isSelected) exit();
-  }, [exit, isSelected]);
+    if (isSelected || items.length === 0) exit();
+  }, [exit, isSelected, items]);
+
+  if (items.length <= 0) {
+    return <Text color={'red'}>缺少参数</Text>;
+  }
 
   return (
     <Box flexDirection="column">
       <Text>请选择一个选项</Text>
-      {CHOICES.map((choiceText, index) => (
-        <Text key={choiceText} color={choice === index ? 'green' : undefined}>
+      {items.map((choiceText, index) => (
+        <Text
+          key={`${choiceText}-${index}`}
+          color={choice === index ? 'green' : undefined}
+        >
           {choice === index ? '> ' : '  '}
           {choiceText}
         </Text>
       ))}
-      {isSelected && <Text color={'yellow'}>你选择了：{CHOICES[choice]}</Text>}
+      {isSelected && <Text color={'yellow'}>你选择了：{items[choice]}</Text>}
     </Box>
   );
-}
+};
+
+export default App;
