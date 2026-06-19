@@ -1,6 +1,6 @@
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, Input, DataTable
-from textual.containers import VerticalScroll
+from textual.containers import Vertical
 
 
 class MyApp(App):
@@ -11,7 +11,7 @@ class MyApp(App):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        with VerticalScroll():
+        with Vertical(id="main_container"):
             yield Input(placeholder="请输入仓库名称", id="search_input")
             yield DataTable(show_header=True, id="res_table")
         yield Footer()
