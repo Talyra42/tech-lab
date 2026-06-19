@@ -3,6 +3,7 @@ from textual.widgets import Header, Footer, DataTable
 from textual.containers import Vertical
 from textual import on, work
 from SearchBar import SearchBar
+from RepoDetail import RepoDetail
 import httpx
 
 BASE_URL = "https://api.github.com/search/repositories"
@@ -11,8 +12,10 @@ BASE_URL = "https://api.github.com/search/repositories"
 class MyApp(App):
     TITLE = "Github 仓库浏览器"
     CSS_PATH = "App.tcss"
-
     BINDINGS = [("q", "quit", "退出"), ("/", "focus('search_bar')", "聚焦搜索框")]
+
+    # 缓存搜索结果
+    repos = {}
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -47,6 +50,9 @@ class MyApp(App):
                 )
                 res = response.json()["items"]
 
+                # 缓存结果
+                self.repos = {i["id"]: i for i in res}
+
                 # 清空表格
                 tb.clear()
 
@@ -57,9 +63,16 @@ class MyApp(App):
                         i["stargazers_count"],
                         i["forks_count"],
                         i["description"] or "",
+                        key=i["id"],
                     )
         except Exception as err:
             self.notify(f"搜索失败：{err}", severity="error")
+
+    # 查看详情方法
+    @on(DataTable.RowSelected)
+    def handle_click_row(self, e: DataTable.RowSelected):
+        repo = self.repos[e.row_key.value]  # 直接取，不用循环
+        self.push_screen(RepoDetail(repo))
 
 
 if __name__ == "__main__":
