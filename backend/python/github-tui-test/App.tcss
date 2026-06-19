@@ -4,17 +4,6 @@
     background: $surface;  /* 第五讲：用主题变量，不写死颜色，换主题自动适配 */
 }
 
-/* ===== 搜索框 ===== */
-#search_input {
-    margin-bottom: 1;      /* 第五讲：和下面表格隔开一行 */
-    border: tall $accent;  /* 边框样式 tall + 主题强调色 */
-}
-
-/* 第五讲：伪类——搜索框获得焦点时高亮边框 */
-#search_input:focus {
-    border: tall $primary;
-}
-
 /* ===== 结果表格 ===== */
 #res_table {
     height: 1fr;                      /* 1fr 吃满搜索框之外的剩余纵向空间 */

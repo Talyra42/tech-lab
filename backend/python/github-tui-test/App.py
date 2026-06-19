@@ -1,18 +1,20 @@
 from textual.app import App, ComposeResult
-from textual.widgets import Header, Footer, Input, DataTable
+from textual.widgets import Header, Footer, DataTable
 from textual.containers import Vertical
+from textual import on
+from SearchBar import SearchBar
 
 
 class MyApp(App):
     TITLE = "Github 仓库浏览器"
     CSS_PATH = "App.tcss"
 
-    BINDINGS = [("q", "quit", "退出"), ("/", "focus('search_input')", "聚焦搜索框")]
+    BINDINGS = [("q", "quit", "退出"), ("/", "focus('search_bar')", "聚焦搜索框")]
 
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(id="main_container"):
-            yield Input(placeholder="请输入仓库名称", id="search_input")
+            yield SearchBar(id="search_bar")
             yield DataTable(show_header=True, id="res_table")
         yield Footer()
 
@@ -23,6 +25,10 @@ class MyApp(App):
         tb.add_column("Forks")
         tb.add_column("Description")
         tb.cursor_type = "row"
+
+    @on(SearchBar.Submitted)
+    def handle_search(self, e: SearchBar.Submitted):
+        self.notify(e.value)
 
 
 if __name__ == "__main__":
