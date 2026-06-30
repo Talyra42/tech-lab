@@ -1,0 +1,17 @@
+{
+  "name": "bun-app",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/figlet": "^1.7.0",
+    "prettier": "^3.9.4"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "figlet": "^1.11.0"
+  }
+}
